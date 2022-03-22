@@ -2,8 +2,9 @@ package workers
 
 import (
 	"fmt"
-	"github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/pkg/services/sso"
 	"testing"
+
+	"github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/pkg/services/sso"
 
 	"github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/internal/kafka/internal/clusters/types"
 	"github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/internal/kafka/internal/config"
@@ -1476,7 +1477,7 @@ func TestClusterManager_reconcileClusterInstanceType(t *testing.T) {
 		cluster                api.Cluster
 	}
 	clusterId := "some-cluster-id"
-	supportedInstanceType := "eval"
+	supportedInstanceType := "developer"
 	testOsdConfig := config.NewDataplaneClusterConfig()
 	testOsdConfig.DataPlaneClusterScalingType = config.ManualScaling
 	testOsdConfig.ClusterConfig = config.NewClusterConfig(config.ClusterList{config.ManualCluster{Schedulable: true, KafkaInstanceLimit: 2, ClusterId: clusterId, SupportedInstanceType: supportedInstanceType}})
@@ -1504,7 +1505,7 @@ func TestClusterManager_reconcileClusterInstanceType(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "Update the cluster instance type in the database to standard,eval when cluster scaling type is not manual",
+			name: "Update the cluster instance type in the database to standard,developer when cluster scaling type is not manual",
 			fields: fields{
 				clusterService: &services.ClusterServiceMock{
 					UpdateFunc: func(cluster api.Cluster) *ocmErrors.ServiceError {
@@ -1535,7 +1536,7 @@ func TestClusterManager_reconcileClusterInstanceType(t *testing.T) {
 				},
 				cluster: api.Cluster{
 					ClusterID:             clusterId,
-					SupportedInstanceType: api.EvalTypeSupport.String(),
+					SupportedInstanceType: api.DeveloperTypeSupport.String(),
 				},
 			},
 			wantErr: false,

@@ -30,7 +30,7 @@ const usEast1Region = "us-east-1"
 var limit = int(1)
 
 var allTypesMap = config.InstanceTypeMap{
-	"eval": {
+	"developer": {
 		Limit: &limit,
 	},
 	"standard": {
@@ -44,8 +44,8 @@ var standardMap = config.InstanceTypeMap{
 	},
 }
 
-var evalMap = config.InstanceTypeMap{
-	"eval": {
+var developerMap = config.InstanceTypeMap{
+	"developer": {
 		Limit: &limit,
 	},
 }
@@ -330,7 +330,7 @@ func TestListCloudProviderRegionsWithInstanceType(t *testing.T) {
 					},
 					{
 						Name:                   "eu-west-2",
-						SupportedInstanceTypes: evalMap,
+						SupportedInstanceTypes: developerMap,
 					},
 					{
 						Name:                   "eu-central-1",
@@ -351,12 +351,12 @@ func TestListCloudProviderRegionsWithInstanceType(t *testing.T) {
 	account := h.NewRandAccount()
 	ctx := h.NewAuthenticatedContext(account, nil)
 
-	// should only return regions that support 'eval' instance type if 'instance_type=eval' was specified
+	// should only return regions that support 'developer' instance type if 'instance_type=developer' was specified
 	regions, resp, err := client.DefaultApi.GetCloudProviderRegions(ctx, "aws", &public.GetCloudProviderRegionsOpts{
-		InstanceType: optional.NewString("eval"),
+		InstanceType: optional.NewString("developer"),
 	})
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-	Expect(err).NotTo(HaveOccurred(), "Error occurred when attempting to list cloud provider regions of instance type 'eval': %v", err)
+	Expect(err).NotTo(HaveOccurred(), "Error occurred when attempting to list cloud provider regions of instance type 'developer': %v", err)
 	Expect(regions.Items).To(HaveLen(2))
 	for _, r := range regions.Items {
 		Expect(r.Id).To(SatisfyAny(Equal("us-east-1"), Equal("eu-west-2")))
@@ -403,7 +403,7 @@ func TestListCloudProviderRegionsWithInstanceType(t *testing.T) {
 		}
 	}
 
-	// create kafkas of supported instance types ("standard" and "eval") in the "us-east-1" region and confirm that
+	// create kafkas of supported instance types ("standard" and "developer") in the "us-east-1" region and confirm that
 	// MaxCapacityReached will be false (due to the limit being set to 1 instance of given type in this region)
 	db := test.TestServices.DBFactory.New()
 	kafka := &dbapi.KafkaRequest{
@@ -436,7 +436,7 @@ func TestListCloudProviderRegionsWithInstanceType(t *testing.T) {
 			for _, capacity := range cpr.Capacity {
 				if capacity.InstanceType == types.STANDARD.String() {
 					Expect(capacity.MaxCapacityReached).To(BeTrue())
-				} else if capacity.InstanceType == types.EVAL.String() {
+				} else if capacity.InstanceType == types.DEVELOPER.String() {
 					Expect(capacity.MaxCapacityReached).To(BeFalse())
 				}
 			}
@@ -444,7 +444,7 @@ func TestListCloudProviderRegionsWithInstanceType(t *testing.T) {
 	}
 
 	kafka.ID = api.NewID()
-	kafka.InstanceType = types.EVAL.String()
+	kafka.InstanceType = types.DEVELOPER.String()
 
 	if err := db.Create(kafka).Error; err != nil {
 		t.Errorf("failed to create Kafka db record due to error: %v", err)

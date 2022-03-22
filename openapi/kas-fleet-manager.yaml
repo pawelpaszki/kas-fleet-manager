@@ -1382,8 +1382,8 @@ components:
         type: string
       required: false
       examples:
-        eval_instance_type:
-          value: "eval"
+        developer_instance_type:
+          value: "developer"
         standard_instance_type:
           value: "standard"
   securitySchemes:

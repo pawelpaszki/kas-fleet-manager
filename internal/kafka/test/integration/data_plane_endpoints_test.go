@@ -288,7 +288,7 @@ func TestDataPlaneEndpoints_GetAndUpdateManagedKafkas(t *testing.T) {
 			DesiredStrimziVersion:  "strimzi-cluster-operator.v0.24.0-0",
 			ActualKafkaIBPVersion:  "2.7.0",
 			DesiredKafkaIBPVersion: "2.7.0",
-			InstanceType:           types.EVAL.String(),
+			InstanceType:           types.DEVELOPER.String(),
 			KafkaStorageSize:       storageSize,
 		},
 		{
@@ -376,7 +376,7 @@ func TestDataPlaneEndpoints_GetAndUpdateManagedKafkas(t *testing.T) {
 		Status:                 constants2.KafkaRequestStatusFailed.String(),
 		DesiredKafkaVersion:    "2.7.2",
 		DesiredKafkaIBPVersion: "2.7",
-		InstanceType:           types.EVAL.String(),
+		InstanceType:           types.DEVELOPER.String(),
 	}
 
 	if err := db.Save(additionalKafka).Error; err != nil {
@@ -581,7 +581,7 @@ func TestDataPlaneEndpoints_GetAndUpdateManagedKafkasWithTlsCerts(t *testing.T) 
 		PlacementId:                      "some-placement-id",
 		DesiredKafkaVersion:              "2.7.0",
 		DesiredKafkaIBPVersion:           "2.7",
-		InstanceType:                     types.EVAL.String(),
+		InstanceType:                     types.DEVELOPER.String(),
 	}
 
 	db := test.TestServices.DBFactory.New()
@@ -865,7 +865,7 @@ func TestDataPlaneEndpoints_UpdateManagedKafkasWithRoutes(t *testing.T) {
 			SsoClientSecret:        ssoSecret,
 			DesiredKafkaVersion:    "2.6.0",
 			DesiredKafkaIBPVersion: "2.6",
-			InstanceType:           types.EVAL.String(),
+			InstanceType:           types.DEVELOPER.String(),
 		},
 	}
 

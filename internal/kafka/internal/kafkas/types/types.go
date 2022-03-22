@@ -5,8 +5,8 @@ import "github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/pkg/client/ocm"
 type KafkaInstanceType string
 
 const (
-	EVAL     KafkaInstanceType = "eval"
-	STANDARD KafkaInstanceType = "standard"
+	DEVELOPER KafkaInstanceType = "developer"
+	STANDARD  KafkaInstanceType = "standard"
 )
 
 func (t KafkaInstanceType) String() string {
@@ -17,5 +17,5 @@ func (t KafkaInstanceType) GetQuotaType() ocm.KafkaQuotaType {
 	if t == STANDARD {
 		return ocm.StandardQuota
 	}
-	return ocm.EvalQuota
+	return ocm.DeveloperQuota
 }

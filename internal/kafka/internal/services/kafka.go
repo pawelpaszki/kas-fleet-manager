@@ -3,9 +3,10 @@ package services
 import (
 	"context"
 	"fmt"
-	"github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/pkg/services/sso"
 	"strings"
 	"sync"
+
+	"github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/pkg/services/sso"
 
 	constants2 "github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/internal/kafka/constants"
 	"github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/internal/kafka/internal/api/dbapi"
@@ -36,6 +37,7 @@ import (
 
 var kafkaDeletionStatuses = []string{constants2.KafkaRequestStatusDeleting.String(), constants2.KafkaRequestStatusDeprovision.String()}
 var kafkaManagedCRStatuses = []string{constants2.KafkaRequestStatusProvisioning.String(), constants2.KafkaRequestStatusDeprovision.String(), constants2.KafkaRequestStatusReady.String(), constants2.KafkaRequestStatusFailed.String()}
+var kafkaDeletionInstanceTypes = []string{types.DEVELOPER.String(), "eval"}
 
 type KafkaRoutesAction string
 
@@ -173,30 +175,30 @@ func (k *kafkaService) DetectInstanceType(kafkaRequest *dbapi.KafkaRequest) (typ
 		return types.STANDARD, nil
 	}
 
-	return types.EVAL, nil
+	return types.DEVELOPER, nil
 }
 
 // reserveQuota - reserves quota for the given kafka request. If a RHOSAK quota has been assigned, it will try to reserve RHOSAK quota, otherwise it will try with RHOSAKTrial
 func (k *kafkaService) reserveQuota(kafkaRequest *dbapi.KafkaRequest) (subscriptionId string, err *errors.ServiceError) {
-	if kafkaRequest.InstanceType == types.EVAL.String() {
-		if !k.kafkaConfig.Quota.AllowEvaluatorInstance {
-			return "", errors.NewWithCause(errors.ErrorForbidden, err, "kafka eval instances are not allowed")
+	if kafkaRequest.InstanceType == types.DEVELOPER.String() {
+		if !k.kafkaConfig.Quota.AllowDeveloperInstance {
+			return "", errors.NewWithCause(errors.ErrorForbidden, err, "kafka developer instances are not allowed")
 		}
 
-		// Only one EVAL instance is admitted. Let's check if the user already owns one
+		// Only one DEVELOPER instance is admitted. Let's check if the user already owns one
 		dbConn := k.connectionFactory.New()
 		var count int64
 		if err := dbConn.Model(&dbapi.KafkaRequest{}).
-			Where("instance_type = ?", types.EVAL).
+			Where("instance_type = ?", types.DEVELOPER).
 			Where("owner = ?", kafkaRequest.Owner).
 			Where("organisation_id = ?", kafkaRequest.OrganisationId).
 			Count(&count).
 			Error; err != nil {
-			return "", errors.NewWithCause(errors.ErrorGeneral, err, "failed to count kafka eval instances")
+			return "", errors.NewWithCause(errors.ErrorGeneral, err, "failed to count kafka developer instances")
 		}
 
 		if count > 0 {
-			return "", errors.TooManyKafkaInstancesReached("only one eval instance is allowed")
+			return "", errors.TooManyKafkaInstancesReached("only one developer instance is allowed")
 		}
 	}
 
@@ -476,8 +478,8 @@ func (k *kafkaService) DeprovisionKafkaForUsers(users []string) *errors.ServiceE
 func (k *kafkaService) DeprovisionExpiredKafkas(kafkaAgeInHours int) *errors.ServiceError {
 	dbConn := k.connectionFactory.New().
 		Model(&dbapi.KafkaRequest{}).
-		Where("instance_type = ?", types.EVAL.String()).
-		Where("created_at  <=  ?", time.Now().Add(-1*time.Duration(kafkaAgeInHours)*time.Hour)).
+		Where("instance_type IN (?)", kafkaDeletionInstanceTypes).
+		Where("created_at <= ?", time.Now().Add(-1*time.Duration(kafkaAgeInHours)*time.Hour)).
 		Where("status NOT IN (?)", kafkaDeletionStatuses)
 
 	db := dbConn.Update("status", constants2.KafkaRequestStatusDeprovision)

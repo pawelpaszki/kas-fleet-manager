@@ -163,10 +163,10 @@ func TestKafka_InstanceTypeCapacity(t *testing.T) {
 	configHook := func(clusterConfig *config.DataplaneClusterConfig) {
 		clusterConfig.DataPlaneClusterScalingType = config.ManualScaling
 		clusterConfig.ClusterConfig = config.NewClusterConfig(config.ClusterList{
-			config.ManualCluster{ClusterId: "test01", ClusterDNS: clusterDns, Status: api.ClusterReady, KafkaInstanceLimit: 2, Region: clusterCriteria.Region, MultiAZ: clusterCriteria.MultiAZ, CloudProvider: clusterCriteria.Provider, Schedulable: true, SupportedInstanceType: "standard,eval"},
+			config.ManualCluster{ClusterId: "test01", ClusterDNS: clusterDns, Status: api.ClusterReady, KafkaInstanceLimit: 2, Region: clusterCriteria.Region, MultiAZ: clusterCriteria.MultiAZ, CloudProvider: clusterCriteria.Provider, Schedulable: true, SupportedInstanceType: "standard,developer"},
 			config.ManualCluster{ClusterId: "test02", ClusterDNS: clusterDns, Status: api.ClusterReady, KafkaInstanceLimit: 2, Region: clusterCriteria.Region, MultiAZ: clusterCriteria.MultiAZ, CloudProvider: clusterCriteria.Provider, Schedulable: true, SupportedInstanceType: "standard"},
-			config.ManualCluster{ClusterId: "test03", ClusterDNS: clusterDns, Status: api.ClusterReady, KafkaInstanceLimit: 2, Region: clusterCriteria.Region, MultiAZ: clusterCriteria.MultiAZ, CloudProvider: clusterCriteria.Provider, Schedulable: true, SupportedInstanceType: "eval"},
-			config.ManualCluster{ClusterId: "test04", ClusterDNS: clusterDns, Status: api.ClusterReady, KafkaInstanceLimit: 0, Region: clusterCriteria.Region, MultiAZ: clusterCriteria.MultiAZ, CloudProvider: clusterCriteria.Provider, Schedulable: true, SupportedInstanceType: "standard,eval"},
+			config.ManualCluster{ClusterId: "test03", ClusterDNS: clusterDns, Status: api.ClusterReady, KafkaInstanceLimit: 2, Region: clusterCriteria.Region, MultiAZ: clusterCriteria.MultiAZ, CloudProvider: clusterCriteria.Provider, Schedulable: true, SupportedInstanceType: "developer"},
+			config.ManualCluster{ClusterId: "test04", ClusterDNS: clusterDns, Status: api.ClusterReady, KafkaInstanceLimit: 0, Region: clusterCriteria.Region, MultiAZ: clusterCriteria.MultiAZ, CloudProvider: clusterCriteria.Provider, Schedulable: true, SupportedInstanceType: "standard,developer"},
 		})
 	}
 
@@ -194,7 +194,7 @@ func TestKafka_InstanceTypeCapacity(t *testing.T) {
 
 	providerConfig := ProviderConfig(h)
 
-	evalLimit := int(3)
+	developerLimit := int(3)
 
 	standardLimit := int(3)
 
@@ -211,8 +211,8 @@ func TestKafka_InstanceTypeCapacity(t *testing.T) {
 							"standard": config.InstanceTypeConfig{
 								Limit: &standardLimit,
 							},
-							"eval": config.InstanceTypeConfig{
-								Limit: &evalLimit,
+							"developer": config.InstanceTypeConfig{
+								Limit: &developerLimit,
 							},
 						},
 					},
@@ -264,31 +264,31 @@ func TestKafka_InstanceTypeCapacity(t *testing.T) {
 		kafkaRequest.Region = unsupportedRegion
 	})
 
-	evalKafka1 := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
+	developerKafka1 := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
 		kafkaRequest.Owner = "dummyuser1"
 		kafkaRequest.Name = "dummy-kafka-6"
-		kafkaRequest.InstanceType = types.EVAL.String()
+		kafkaRequest.InstanceType = types.DEVELOPER.String()
 	})
 
-	evalKafka2 := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
+	developerKafka2 := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
 		kafkaRequest.Owner = "dummyuser2"
 		kafkaRequest.Name = "dummy-kafka-7"
-		kafkaRequest.InstanceType = types.EVAL.String()
+		kafkaRequest.InstanceType = types.DEVELOPER.String()
 	})
 
-	evalKafka3 := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
+	developerKafka3 := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
 		kafkaRequest.Owner = "dummyuser3"
 		kafkaRequest.Name = "dummy-kafka-8"
-		kafkaRequest.InstanceType = types.EVAL.String()
+		kafkaRequest.InstanceType = types.DEVELOPER.String()
 	})
 
-	evalKafka4 := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
+	developerKafka4 := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
 		kafkaRequest.Owner = "dummyuser4"
 		kafkaRequest.Name = "dummy-kafka-9"
-		kafkaRequest.InstanceType = types.EVAL.String()
+		kafkaRequest.InstanceType = types.DEVELOPER.String()
 	})
 
-	evalKafkaIncorrectRegion := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
+	developerKafkaIncorrectRegion := buildKafkaRequest(func(kafkaRequest *dbapi.KafkaRequest) {
 		kafkaRequest.Owner = "testuser5@example.com"
 		kafkaRequest.Name = "dummy-kafka-10"
 		kafkaRequest.InstanceType = types.STANDARD.String()
@@ -325,21 +325,21 @@ func TestKafka_InstanceTypeCapacity(t *testing.T) {
 			errorCheckNoError,
 		},
 		{
-			evalKafka1,
+			developerKafka1,
 			errorCheckNoError,
 		},
 		{
-			evalKafka2,
+			developerKafka2,
 			errorCheckNoError,
 		},
-		// the "standard,eval" cluster should be filled up by standard instances, hence despite of
-		// global capacity being available for eval instances, there is no space on clusters supporting this type of instance
+		// the "standard,developer" cluster should be filled up by standard instances, hence despite of
+		// global capacity being available for developer instances, there is no space on clusters supporting this type of instance
 		{
-			evalKafka3,
+			developerKafka3,
 			errorCheckWithError,
 		},
 		{
-			evalKafka4,
+			developerKafka4,
 			errorCheckWithError,
 		},
 		{
@@ -351,16 +351,16 @@ func TestKafka_InstanceTypeCapacity(t *testing.T) {
 			errorCheckUnsupportedRegion,
 		},
 		{
-			evalKafkaIncorrectRegion,
+			developerKafkaIncorrectRegion,
 			errorCheckUnsupportedRegion,
 		},
 	}
 
 	standardClusters := "test01,test02"
 
-	evalClusters := "test01,test03"
+	developerClusters := "test01,test03"
 
-	testValidations(standardClusters, evalClusters, t, kafkaValidations)
+	testValidations(standardClusters, developerClusters, t, kafkaValidations)
 }
 
 // build a test kafka request
@@ -380,7 +380,7 @@ func buildKafkaRequest(modifyFn func(kafkaRequest *dbapi.KafkaRequest)) *dbapi.K
 	return kafkaRequest
 }
 
-func testValidations(standardClusters, evalClusters string, t *testing.T, kafkaValidations []kafkaValidation) {
+func testValidations(standardClusters, developerClusters string, t *testing.T, kafkaValidations []kafkaValidation) {
 	for _, val := range kafkaValidations {
 		errK := test.TestServices.KafkaService.RegisterKafkaJob(val.kafka)
 		if (errK != nil) != val.eCheck.wantErr {
@@ -618,7 +618,7 @@ func TestKafkaCreate_TooManyKafkas(t *testing.T) {
 	configHook := func(clusterConfig *config.DataplaneClusterConfig) {
 		clusterConfig.DataPlaneClusterScalingType = config.ManualScaling
 		clusterConfig.ClusterConfig = config.NewClusterConfig(config.ClusterList{
-			config.ManualCluster{ClusterId: "test01", ClusterDNS: "app.example.com", Status: api.ClusterReady, KafkaInstanceLimit: 1, Region: mocks.MockCluster.Region().ID(), MultiAZ: testMultiAZ, CloudProvider: mocks.MockCluster.CloudProvider().ID(), Schedulable: true, SupportedInstanceType: "standard,eval"},
+			config.ManualCluster{ClusterId: "test01", ClusterDNS: "app.example.com", Status: api.ClusterReady, KafkaInstanceLimit: 1, Region: mocks.MockCluster.Region().ID(), MultiAZ: testMultiAZ, CloudProvider: mocks.MockCluster.CloudProvider().ID(), Schedulable: true, SupportedInstanceType: "standard,developer"},
 		})
 	}
 
@@ -929,7 +929,7 @@ func TestKafkaDenyList_RemovingKafkaForDeniedOwners(t *testing.T) {
 			Name:           "dummy-kafka-2",
 			OrganisationId: orgId,
 			Status:         constants2.KafkaRequestStatusAccepted.String(),
-			InstanceType:   types.EVAL.String(),
+			InstanceType:   types.DEVELOPER.String(),
 		},
 		{
 			MultiAZ:        false,
@@ -940,7 +940,7 @@ func TestKafkaDenyList_RemovingKafkaForDeniedOwners(t *testing.T) {
 			Name:           "dummy-kafka-3",
 			OrganisationId: orgId,
 			Status:         constants2.KafkaRequestStatusPreparing.String(),
-			InstanceType:   types.EVAL.String(),
+			InstanceType:   types.DEVELOPER.String(),
 		},
 		{
 			MultiAZ:             false,
@@ -1072,9 +1072,9 @@ func TestKafkaQuotaManagementList_MaxAllowedInstances(t *testing.T) {
 	resp5Body, resp5, _ := client.DefaultApi.CreateKafka(externalUserCtx, true, kafka1)
 	_, resp6, _ := client.DefaultApi.CreateKafka(externalUserCtx, true, kafka2)
 
-	// verify that the first request was accepted for an eval type
+	// verify that the first request was accepted for an developer type
 	Expect(resp5.StatusCode).To(Equal(http.StatusAccepted))
-	Expect(resp5Body.InstanceType).To(Equal("eval"))
+	Expect(resp5Body.InstanceType).To(Equal("developer"))
 
 	// verify that the second request for the external user errored with 403 Forbidden
 	Expect(resp6.StatusCode).To(Equal(http.StatusForbidden))
@@ -1288,7 +1288,7 @@ func TestKafka_Delete(t *testing.T) {
 		DesiredKafkaVersion:   "2.6.0",
 		ActualStrimziVersion:  "v.23.0",
 		DesiredStrimziVersion: "v0.23.0",
-		InstanceType:          types.EVAL.String(),
+		InstanceType:          types.DEVELOPER.String(),
 	}
 
 	if err := db.Create(kafka).Error; err != nil {
@@ -1784,7 +1784,7 @@ func TestKafkaList_CorrectTokenIssuer_AuthzSuccess(t *testing.T) {
 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
 }
 
-// TestKafka_RemovingExpiredKafkas_NoStandardInstances tests that all eval kafkas are removed after their allocated life span has expired.
+// TestKafka_RemovingExpiredKafkas_NoStandardInstances tests that all developer kafkas are removed after their allocated life span has expired.
 // No standard instances are present
 func TestKafka_RemovingExpiredKafkas_NoStandardInstances(t *testing.T) {
 	ocmServer := mocks.NewMockConfigurableServerBuilder().Build()
@@ -1824,7 +1824,7 @@ func TestKafka_RemovingExpiredKafkas_NoStandardInstances(t *testing.T) {
 			Name:           "dummy-kafka-to-remain",
 			OrganisationId: orgId,
 			Status:         constants2.KafkaRequestStatusAccepted.String(),
-			InstanceType:   types.EVAL.String(),
+			InstanceType:   types.DEVELOPER.String(),
 		},
 		{
 			Meta: api.Meta{
@@ -1841,7 +1841,7 @@ func TestKafka_RemovingExpiredKafkas_NoStandardInstances(t *testing.T) {
 			SsoClientID:         "dummy-sso-client-id",
 			SsoClientSecret:     "dummy-sso-client-secret",
 			Status:              constants2.KafkaRequestStatusProvisioning.String(),
-			InstanceType:        types.EVAL.String(),
+			InstanceType:        types.DEVELOPER.String(),
 		},
 		{
 			Meta: api.Meta{
@@ -1858,7 +1858,7 @@ func TestKafka_RemovingExpiredKafkas_NoStandardInstances(t *testing.T) {
 			SsoClientID:         "dummy-sso-client-id",
 			SsoClientSecret:     "dummy-sso-client-secret",
 			Status:              constants2.KafkaRequestStatusReady.String(),
-			InstanceType:        types.EVAL.String(),
+			InstanceType:        types.DEVELOPER.String(),
 		},
 	}
 
@@ -1875,7 +1875,7 @@ func TestKafka_RemovingExpiredKafkas_NoStandardInstances(t *testing.T) {
 	Expect(kafkaDeletionErr).NotTo(HaveOccurred(), "Error waiting for kafka deletion: %v", kafkaDeletionErr)
 }
 
-// TestKafka_RemovingExpiredKafkas_EmptyList tests that all eval kafkas are removed after their allocated life span has expired
+// TestKafka_RemovingExpiredKafkas_EmptyList tests that all developer kafkas are removed after their allocated life span has expired
 // while standard instances are left behind
 func TestKafka_RemovingExpiredKafkas_WithStandardInstances(t *testing.T) {
 
@@ -1916,7 +1916,7 @@ func TestKafka_RemovingExpiredKafkas_WithStandardInstances(t *testing.T) {
 			Name:           "dummy-kafka-not-yet-expired",
 			OrganisationId: orgId,
 			Status:         constants2.KafkaRequestStatusAccepted.String(),
-			InstanceType:   types.EVAL.String(),
+			InstanceType:   types.DEVELOPER.String(),
 		},
 		{
 			Meta: api.Meta{
@@ -1933,7 +1933,7 @@ func TestKafka_RemovingExpiredKafkas_WithStandardInstances(t *testing.T) {
 			SsoClientID:         "dummy-sso-client-id",
 			SsoClientSecret:     "dummy-sso-client-secret",
 			Status:              constants2.KafkaRequestStatusReady.String(),
-			InstanceType:        types.EVAL.String(),
+			InstanceType:        types.DEVELOPER.String(),
 		},
 		{
 			Meta: api.Meta{
