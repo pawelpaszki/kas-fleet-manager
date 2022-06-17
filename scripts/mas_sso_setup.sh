@@ -1,6 +1,4 @@
 #!/bin/bash
-KEYCLOAK_PORT_NO=8180
-
 set -e
 
 docker network create mas-sso-network || true
