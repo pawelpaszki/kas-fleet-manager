@@ -1,12 +1,7 @@
 #!/bin/bash
-
-KEYCLOAK_URL=http://localhost:8180
 TOKEN_PATH="/auth/realms/master/protocol/openid-connect/token"
-REALM=rhoas
 
 CLIENT_ID=admin-cli
-USERNAME=admin
-PASS=admin
 
 FLEET_OPERATOR_ROLE=kas_fleetshard_operator
 CONNECTOR_OPERATOR_ROLE=connector_fleetshard_operator
@@ -15,7 +10,7 @@ CONNECTOR_OPERATOR_ROLE=connector_fleetshard_operator
 ERR_MESSAGE="Keycloak server not running at localhost:8180. No realm configuration will be applied"
 timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8180/auth/realms/master)" != "200" ]]; do echo "Waiting for keycloak server at localhost:8180"; sleep 10; done' || echo $ERR_MESSAGE
 
-RESULT=`curl -sk --data "grant_type=password&client_id=$CLIENT_ID&username=$USERNAME&password=$PASS" $KEYCLOAK_URL$TOKEN_PATH`
+RESULT=`curl -sk --data "grant_type=password&client_id=$CLIENT_ID&username=$KEYCLOAK_USER&password=$KEYCLOAK_PASSWORD" $KEYCLOAK_URL:$KEYCLOAK_PORT_NO$TOKEN_PATH`
 TOKEN=$(jq -r '.access_token' <<< $RESULT)
 echo $TOKEN
 
