@@ -33,7 +33,7 @@ var (
 			},
 		},
 	}
-	fullKafkaConfig = config.KafkaConfig{
+	FullKafkaConfig = config.KafkaConfig{
 		SupportedInstanceTypes: &config.KafkaSupportedInstanceTypesConfig{
 			Configuration: config.SupportedKafkaInstanceTypesConfig{
 				SupportedKafkaInstanceTypes: []config.KafkaInstanceType{
@@ -193,7 +193,7 @@ func Test_ListCloudProviderRegions(t *testing.T) {
 					},
 				},
 				providerConfig: &supportedProviders,
-				kafkaConfig:    &fullKafkaConfig,
+				kafkaConfig:    &FullKafkaConfig,
 			},
 			wantStatusCode: http.StatusOK,
 		},
@@ -227,7 +227,7 @@ func Test_ListCloudProviderRegions(t *testing.T) {
 					},
 				},
 				providerConfig: &supportedProviders,
-				kafkaConfig:    &fullKafkaConfig,
+				kafkaConfig:    &FullKafkaConfig,
 			},
 			wantStatusCode: http.StatusInternalServerError,
 		},
