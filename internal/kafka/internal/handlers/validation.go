@@ -42,6 +42,10 @@ func ValidateBillingModel(kafkaRequestPayload *public.KafkaRequestPayload) handl
 			return errors.InvalidBillingAccount("invalid billing model: %s, only %v and %v are allowed", billingModel,
 				v1.BillingModelStandard, v1.BillingModelMarketplace)
 		}
+		if billingModel != string(v1.BillingModelStandard) && *kafkaRequestPayload.ClusterId != "" {
+			return errors.InvalidBillingAccount("invalid billing model: %s, only %v is allowed", billingModel,
+				v1.BillingModelStandard)
+		}
 		return nil
 	}
 }

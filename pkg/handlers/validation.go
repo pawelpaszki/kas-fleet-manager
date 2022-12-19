@@ -78,7 +78,7 @@ func ValidateExternalClusterId(value *string, field string) Validate {
 
 func ValidateClusterId(value *string, field string) Validate {
 	return func() *errors.ServiceError {
-		if !ValidAlphaNumeric.MatchString(*value) {
+		if len(*value) > 0 && !ValidAlphaNumeric.MatchString(*value) {
 			return errors.InvalidClusterId("%s does not match %s", field, ValidUuidRegexp.String())
 		}
 		return nil

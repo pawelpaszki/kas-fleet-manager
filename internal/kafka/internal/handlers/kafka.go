@@ -51,6 +51,7 @@ func (h kafkaHandler) Create(w http.ResponseWriter, r *http.Request) {
 			ValidateCloudProvider(ctx, h.service, &kafkaRequestPayload, h.providerConfig, "creating kafka requests"),
 			ValidateKafkaPlan(ctx, h.service, h.kafkaConfig, &kafkaRequestPayload),
 			ValidateBillingCloudAccountIdAndMarketplace(ctx, h.service, &kafkaRequestPayload),
+			handlers.ValidateClusterId(kafkaRequestPayload.ClusterId, "cluster id"),
 			ValidateBillingModel(&kafkaRequestPayload),
 		},
 		Action: func() (interface{}, *errors.ServiceError) {
@@ -64,6 +65,11 @@ func (h kafkaHandler) Create(w http.ResponseWriter, r *http.Request) {
 			convKafka.InstanceType, convKafka.SizeId, _ = getInstanceTypeAndSize(ctx, h.service, h.kafkaConfig, &kafkaRequestPayload)
 
 			convKafka.CloudProvider, convKafka.Region, _ = getCloudProviderAndRegion(ctx, h.service, &kafkaRequestPayload, h.providerConfig)
+
+			// enterprise kafkas should be assigned to specific cluster
+			if *kafkaRequestPayload.ClusterId != "" {
+				convKafka.ClusterID = *kafkaRequestPayload.ClusterId
+			}
 
 			svcErr := h.service.RegisterKafkaJob(convKafka)
 			if svcErr != nil {

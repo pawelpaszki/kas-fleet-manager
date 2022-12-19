@@ -382,20 +382,43 @@ func (k *kafkaService) RegisterKafkaJob(kafkaRequest *dbapi.KafkaRequest) *error
 		return errors.TooManyKafkaInstancesReached(fmt.Sprintf("region %s cannot accept instance type: %s at this moment", kafkaRequest.Region, kafkaRequest.InstanceType))
 	}
 
-	if !k.dataplaneClusterConfig.IsDataPlaneAutoScalingEnabled() {
-		cluster, e := k.clusterPlacementStrategy.FindCluster(kafkaRequest)
-		if e != nil || cluster == nil {
-			msg := fmt.Sprintf("no available cluster found for Kafka instance type '%s' in region '%s'", kafkaRequest.InstanceType, kafkaRequest.Region)
-			if e != nil {
-				logger.Logger.Error(fmt.Errorf("%s:%w", msg, e))
-			} else {
-				logger.Logger.Infof(msg)
-			}
-
-			return errors.TooManyKafkaInstancesReached(fmt.Sprintf("region %s cannot accept instance type: %s at this moment", kafkaRequest.Region, kafkaRequest.InstanceType))
+	// enterprise kafkas have their cluster ID assigned when a request is validated in the handler
+	if kafkaRequest.ClusterID != "" {
+		cluster, err := k.clusterService.FindClusterByID(kafkaRequest.ClusterID)
+		if err != nil || cluster == nil {
+			return errors.GeneralError("failed to get cluster with id: %s", kafkaRequest.ClusterID)
+		}
+		if cluster.OrganizationID != kafkaRequest.OrganisationId {
+			return errors.Unauthorized("user with organization ID: '%s' is unauthorized to create kafka on a cluster belonging to different organization", kafkaRequest.OrganisationId)
 		}
 
-		kafkaRequest.ClusterID = cluster.ClusterID
+		instanceSize, getInstanceSizeErr := k.kafkaConfig.GetKafkaInstanceSize(kafkaRequest.InstanceType, kafkaRequest.SizeId)
+		if getInstanceSizeErr != nil {
+			return errors.GeneralError("failed to get kafka instance size: %s", kafkaRequest.SizeId)
+		}
+
+		capacityInfo := cluster.RetrieveDynamicCapacityInfo()
+
+		remainingStreamingUnits := capacityInfo[kafkaRequest.InstanceType].RemainingUnits
+		if int(remainingStreamingUnits) < instanceSize.CapacityConsumed {
+			return errors.TooManyKafkaInstancesReached("no available space left on cluster with id: %s for kafka of size: %s", kafkaRequest.ClusterID, kafkaRequest.SizeId)
+		}
+	} else {
+		if !k.dataplaneClusterConfig.IsDataPlaneAutoScalingEnabled() {
+			cluster, e := k.clusterPlacementStrategy.FindCluster(kafkaRequest)
+			if e != nil || cluster == nil {
+				msg := fmt.Sprintf("no available cluster found for Kafka instance type '%s' in region '%s'", kafkaRequest.InstanceType, kafkaRequest.Region)
+				if e != nil {
+					logger.Logger.Error(fmt.Errorf("%s:%w", msg, e))
+				} else {
+					logger.Logger.Infof(msg)
+				}
+
+				return errors.TooManyKafkaInstancesReached(fmt.Sprintf("region %s cannot accept instance type: %s at this moment", kafkaRequest.Region, kafkaRequest.InstanceType))
+			}
+
+			kafkaRequest.ClusterID = cluster.ClusterID
+		}
 	}
 
 	subscriptionId, err := k.reserveQuota(kafkaRequest)
