@@ -120,6 +120,7 @@ type KafkaService interface {
 	GetAvailableSizesInRegion(criteria *FindClusterCriteria) ([]string, *errors.ServiceError)
 	ValidateBillingAccount(externalId string, instanceType types.KafkaInstanceType, billingCloudAccountId string, marketplace *string) *errors.ServiceError
 	AssignBootstrapServerHost(kafkaRequest *dbapi.KafkaRequest) error
+	GetKafkaSizeCountOfEnterpriseCluster(clusterID string) ([]*ClusterSizeCount, error)
 }
 
 var _ KafkaService = &kafkaService{}
@@ -399,8 +400,24 @@ func (k *kafkaService) RegisterKafkaJob(kafkaRequest *dbapi.KafkaRequest) *error
 
 		capacityInfo := cluster.RetrieveDynamicCapacityInfo()
 
-		remainingStreamingUnits := capacityInfo[kafkaRequest.InstanceType].RemainingUnits
-		if int(remainingStreamingUnits) < instanceSize.CapacityConsumed {
+		sizeCountOfCluster, e := k.GetKafkaSizeCountOfEnterpriseCluster(kafkaRequest.ClusterID)
+
+		if e != nil {
+			return errors.GeneralError("failed to establish remaining capacity of cluster with id: %s", kafkaRequest.ClusterID)
+		}
+
+		capacityUsed := int32(0)
+
+		for _, sizeCount := range sizeCountOfCluster {
+			instSize, err := k.kafkaConfig.GetKafkaInstanceSize(types.STANDARD.String(), sizeCount.SizeId)
+			if err != nil {
+				return errors.GeneralError("failed to get kafka instance size: %s", kafkaRequest.SizeId)
+			}
+
+			capacityUsed = capacityUsed + int32(instSize.CapacityConsumed)*sizeCount.Count
+		}
+
+		if int(capacityInfo[kafkaRequest.InstanceType].MaxNodes-capacityUsed) < instanceSize.CapacityConsumed {
 			return errors.TooManyKafkaInstancesReached("no available space left on cluster with id: %s for kafka of size: %s", kafkaRequest.ClusterID, kafkaRequest.SizeId)
 		}
 	} else {
@@ -1336,4 +1353,22 @@ func (k *kafkaService) getRoute53RegionFromKafkaRequest(kafkaRequest *dbapi.Kafk
 	default:
 		return "", errors.GeneralError("unknown cloud provider: %q", kafkaRequest.CloudProvider)
 	}
+}
+
+type ClusterSizeCount struct {
+	SizeId string
+	Count  int32
+}
+
+func (k *kafkaService) GetKafkaSizeCountOfEnterpriseCluster(clusterID string) ([]*ClusterSizeCount, error) {
+	dbConn := k.connectionFactory.New()
+	var sizeCountPerCluster []*ClusterSizeCount
+	if err := dbConn.Model(&dbapi.KafkaRequest{}).
+		Select("size_id, count(1) as Count").
+		Group("size_id").
+		Where("cluster_id = ?", clusterID).
+		Scan(&sizeCountPerCluster).Error; err != nil {
+		return nil, errors.GeneralError("failed to get count of sizes of a cluster")
+	}
+	return sizeCountPerCluster, nil
 }
