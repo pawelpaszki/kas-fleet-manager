@@ -35,7 +35,7 @@ func (h clusterHandler) RegisterEnterpriseCluster(w http.ResponseWriter, r *http
 
 			handlers.ValidateExternalClusterId(&clusterPayload.ClusterExternalId, "external cluster id"),
 
-			handlers.ValidateClusterId(&clusterPayload.ClusterId, "cluster id"),
+			handlers.ValidateNotEmptyClusterId(&clusterPayload.ClusterId, "cluster id"),
 
 			ValidateClusterIdIsUnique(&clusterPayload.ClusterId, h.clusterService),
 
