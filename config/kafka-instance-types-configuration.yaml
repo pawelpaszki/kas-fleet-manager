@@ -73,6 +73,11 @@ supported_instance_types:
       ams_billing_models:
       - standard
       grace_period_days: 4
+    - id: enterprise
+      ams_resource: rhosak
+      ams_product: RHOSAK
+      ams_billing_models:
+      - standard
     sizes:
     - id: x1
       display_name: "1"

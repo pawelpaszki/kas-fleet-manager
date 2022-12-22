@@ -62,6 +62,9 @@ var _ KafkaService = &KafkaServiceMock{}
 //			GetCNAMERecordStatusFunc: func(kafkaRequest *dbapi.KafkaRequest) (*CNameRecordStatus, error) {
 //				panic("mock out the GetCNAMERecordStatus method")
 //			},
+//			GetKafkaSizeCountOfEnterpriseClusterFunc: func(clusterID string) ([]*ClusterSizeCount, error) {
+//				panic("mock out the GetKafkaSizeCountOfEnterpriseCluster method")
+//			},
 //			GetManagedKafkaByClusterIDFunc: func(clusterID string) ([]v1.ManagedKafka, *apiErrors.ServiceError) {
 //				panic("mock out the GetManagedKafkaByClusterID method")
 //			},
@@ -149,6 +152,9 @@ type KafkaServiceMock struct {
 
 	// GetCNAMERecordStatusFunc mocks the GetCNAMERecordStatus method.
 	GetCNAMERecordStatusFunc func(kafkaRequest *dbapi.KafkaRequest) (*CNameRecordStatus, error)
+
+	// GetKafkaSizeCountOfEnterpriseClusterFunc mocks the GetKafkaSizeCountOfEnterpriseCluster method.
+	GetKafkaSizeCountOfEnterpriseClusterFunc func(clusterID string) ([]*ClusterSizeCount, error)
 
 	// GetManagedKafkaByClusterIDFunc mocks the GetManagedKafkaByClusterID method.
 	GetManagedKafkaByClusterIDFunc func(clusterID string) ([]v1.ManagedKafka, *apiErrors.ServiceError)
@@ -261,6 +267,11 @@ type KafkaServiceMock struct {
 			// KafkaRequest is the kafkaRequest argument value.
 			KafkaRequest *dbapi.KafkaRequest
 		}
+		// GetKafkaSizeCountOfEnterpriseCluster holds details about calls to the GetKafkaSizeCountOfEnterpriseCluster method.
+		GetKafkaSizeCountOfEnterpriseCluster []struct {
+			// ClusterID is the clusterID argument value.
+			ClusterID string
+		}
 		// GetManagedKafkaByClusterID holds details about calls to the GetManagedKafkaByClusterID method.
 		GetManagedKafkaByClusterID []struct {
 			// ClusterID is the clusterID argument value.
@@ -361,6 +372,7 @@ type KafkaServiceMock struct {
 	lockGetAvailableSizesInRegion                sync.RWMutex
 	lockGetByID                                  sync.RWMutex
 	lockGetCNAMERecordStatus                     sync.RWMutex
+	lockGetKafkaSizeCountOfEnterpriseCluster     sync.RWMutex
 	lockGetManagedKafkaByClusterID               sync.RWMutex
 	lockHasAvailableCapacityInRegion             sync.RWMutex
 	lockList                                     sync.RWMutex
@@ -766,6 +778,38 @@ func (mock *KafkaServiceMock) GetCNAMERecordStatusCalls() []struct {
 	mock.lockGetCNAMERecordStatus.RLock()
 	calls = mock.calls.GetCNAMERecordStatus
 	mock.lockGetCNAMERecordStatus.RUnlock()
+	return calls
+}
+
+// GetKafkaSizeCountOfEnterpriseCluster calls GetKafkaSizeCountOfEnterpriseClusterFunc.
+func (mock *KafkaServiceMock) GetKafkaSizeCountOfEnterpriseCluster(clusterID string) ([]*ClusterSizeCount, error) {
+	if mock.GetKafkaSizeCountOfEnterpriseClusterFunc == nil {
+		panic("KafkaServiceMock.GetKafkaSizeCountOfEnterpriseClusterFunc: method is nil but KafkaService.GetKafkaSizeCountOfEnterpriseCluster was just called")
+	}
+	callInfo := struct {
+		ClusterID string
+	}{
+		ClusterID: clusterID,
+	}
+	mock.lockGetKafkaSizeCountOfEnterpriseCluster.Lock()
+	mock.calls.GetKafkaSizeCountOfEnterpriseCluster = append(mock.calls.GetKafkaSizeCountOfEnterpriseCluster, callInfo)
+	mock.lockGetKafkaSizeCountOfEnterpriseCluster.Unlock()
+	return mock.GetKafkaSizeCountOfEnterpriseClusterFunc(clusterID)
+}
+
+// GetKafkaSizeCountOfEnterpriseClusterCalls gets all the calls that were made to GetKafkaSizeCountOfEnterpriseCluster.
+// Check the length with:
+//
+//	len(mockedKafkaService.GetKafkaSizeCountOfEnterpriseClusterCalls())
+func (mock *KafkaServiceMock) GetKafkaSizeCountOfEnterpriseClusterCalls() []struct {
+	ClusterID string
+} {
+	var calls []struct {
+		ClusterID string
+	}
+	mock.lockGetKafkaSizeCountOfEnterpriseCluster.RLock()
+	calls = mock.calls.GetKafkaSizeCountOfEnterpriseCluster
+	mock.lockGetKafkaSizeCountOfEnterpriseCluster.RUnlock()
 	return calls
 }
 
