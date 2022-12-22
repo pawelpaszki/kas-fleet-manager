@@ -68,7 +68,7 @@ func (h kafkaHandler) Create(w http.ResponseWriter, r *http.Request) {
 			convKafka.CloudProvider, convKafka.Region, _ = getCloudProviderAndRegion(ctx, h.service, &kafkaRequestPayload, h.providerConfig)
 
 			// enterprise kafkas should be assigned to specified cluster, if its ID is provided
-			if !shared.StringEmpty(*kafkaRequestPayload.ClusterId) && *kafkaRequestPayload.ClusterId != "" {
+			if !shared.StringEmpty(kafkaRequestPayload.ClusterId) {
 				convKafka.ClusterID = *kafkaRequestPayload.ClusterId
 			}
 

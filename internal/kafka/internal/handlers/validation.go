@@ -40,9 +40,8 @@ func validateKafkaBillingModel(ctx context.Context, kafkaService services.KafkaS
 	return func() *errors.ServiceError {
 		billingModel := shared.SafeString(kafkaRequestPayload.BillingModel)
 		// enterprise kafkas billing model validation
-		clusterID := shared.SafeString(kafkaRequestPayload.ClusterId)
 
-		if clusterID != "" && billingModel != string(v1.BillingModelStandard) {
+		if !shared.StringEmpty(kafkaRequestPayload.ClusterId) && !shared.StringEqualsIgnoreCase(billingModel, string(v1.BillingModelStandard)) {
 			return errors.InvalidBillingAccount("invalid billing model: %s, only %v is allowed", billingModel,
 				v1.BillingModelStandard)
 		}
