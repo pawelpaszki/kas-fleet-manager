@@ -424,6 +424,7 @@ func (k *kafkaService) RegisterKafkaJob(kafkaRequest *dbapi.KafkaRequest) *error
 		if int(capacityInfo[kafkaRequest.InstanceType].MaxNodes-capacityUsed) < instanceSize.CapacityConsumed {
 			return errors.TooManyKafkaInstancesReached("no available space left on cluster with id: %s for kafka of size: %s", kafkaRequest.ClusterID, kafkaRequest.SizeId)
 		}
+		kafkaRequest.DesiredKafkaBillingModel = api.StandardTypeSupport.String()
 	} else {
 		if !k.dataplaneClusterConfig.IsDataPlaneAutoScalingEnabled() {
 			cluster, e := k.clusterPlacementStrategy.FindCluster(kafkaRequest)
