@@ -420,7 +420,8 @@ func (k *kafkaService) RegisterKafkaJob(kafkaRequest *dbapi.KafkaRequest) *error
 			}
 			capacityUsed = capacityUsed + int32(instSize.CapacityConsumed)*sizeCount.Count
 		}
-		if int(capacityInfo[kafkaRequest.InstanceType].MaxNodes-capacityUsed) < instanceSize.CapacityConsumed {
+		clusterCapacityUsed := int(capacityInfo[kafkaRequest.InstanceType].MaxNodes - capacityUsed)
+		if clusterCapacityUsed < instanceSize.CapacityConsumed {
 			return errors.TooManyKafkaInstancesReached("no available space left on cluster with id: %s for kafka of size: %s", kafkaRequest.ClusterID, kafkaRequest.SizeId)
 		}
 		kafkaRequest.DesiredKafkaBillingModel = "enterprise" // change to constant
